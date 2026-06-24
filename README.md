@@ -2,37 +2,28 @@
 
 Pure JavaScriptのDSLを使用した自己成長型エージェント。
 
-## 主な特徴と利点
-
-1. **自己成長機能（動的なスキルの作成と実行）**
-   - エージェントは実行時に不足している機能を判断し、自律的に新しいJavaScriptのESモジュール（スキル）を記述・保存・ロードして実行できます。
-2. **Pure JavaScriptによるシンプルなDSL**
-   - 従来のXMLタグによる記述の代わりに、JavaScriptのオブジェクトリテラル（およびテンプレートリテラル）をDSLとして使用します。LLMによるコード生成の親和性が高く、エスケープの複雑さを抑えられます。
-3. **自己コードおよびメモリの自己内省（Introspection）**
-   - 自分自身のソースコード、現在所持しているスキルの一覧、メモリ（Key-Valueストア）の状態をプロンプトコンテキストとしてLLMに入力するため、自己修正や適応が可能です。
-
 ## 使い方
 
 ### 1. エージェントの実行
 
-以下のコマンドでエージェントを起動します。
+新たに定義された Deno タスクまたはバッチファイルを使用してエージェントを起動できます。
 
-```bash
-deno run --allow-read --allow-write --allow-env --allow-net agent.js "文字列 'hello world' を反転させる新しいスキル reverseString を作成して実行してください。"
+**Deno タスクを使用する場合:**
+```powershell
+deno task start "文字列 'hello world' を反転させる新しいスキル reverseString を作成して実行してください。"
 ```
 
-> [!NOTE]
-> `deno` コマンドが認識されない場合は、ユーザープロファイル下のパスを使用してください：
-> `& "$env:USERPROFILE\.deno\bin\deno.exe" run --allow-read --allow-write --allow-env --allow-net agent.js "..."`
+**バッチファイルを使用する場合:**
+```cmd
+.\run.bat "文字列 'hello world' を反転させる新しいスキル reverseString を作成して実行してください。"
+```
 
 ### 2. テストの実行
 
-```bash
-deno test --allow-read --allow-write --allow-env --allow-net
+```powershell
+deno task test
 ```
 
-> [!NOTE]
-> コマンドが認識されない場合は `& "$env:USERPROFILE\.deno\bin\deno.exe" test ...` を使用してください。
 
 ## DSL仕様 (Pure JavaScript)
 
@@ -46,10 +37,7 @@ deno test --allow-read --allow-write --allow-env --allow-net
   type: "action",
   name: "create_skill",
   skillName: "スキル名",
-  code: `export default async function run(agent, arg) {
-    // スキルの実装コード（複数行文字列にはバッククォートを使用）
-    return "result";
-  }`
+  code: "export default async function run(agent, arg) { ... }"
 }
 ```
 
@@ -69,26 +57,5 @@ deno test --allow-read --allow-write --allow-env --allow-net
   type: "action",
   name: "finish",
   message: "ユーザーへの最終回答メッセージ"
-}
-```
-
-### イベント (履歴管理・実行結果のフィードバック)
-
-#### ユーザー入力
-```javascript
-{
-  type: "event",
-  eventType: "user_input",
-  text: "ユーザー入力の内容"
-}
-```
-
-#### スキルの実行・作成結果
-```javascript
-{
-  type: "event",
-  eventType: "execution_result",
-  status: "success", // もしくは "error"
-  output: "実行出力またはエラー内容"
 }
 ```

@@ -1,4 +1,5 @@
-import { join, fromFileUrl, dirname, toFileUrl } from "https://deno.land/std@0.224.0/path/mod.ts";
+import { join, fromFileUrl, dirname, toFileUrl, isAbsolute } from "https://deno.land/std@0.224.0/path/mod.ts";
+import vm from "node:vm";
 
 /**
  * Manages dynamically loaded agent skills.
@@ -41,29 +42,38 @@ export class SkillManager {
   }
 
   /**
-   * Dynamically imports a skill module using file URL and cache busting.
+   * Dynamically imports a skill module using node:vm.
    * 
    * @param {string} name 
    */
   async loadSkill(name) {
-    const absoluteSkillsDir = join(Deno.cwd(), this.skillsDir);
+    const absoluteSkillsDir = isAbsolute(this.skillsDir) ? this.skillsDir : join(Deno.cwd(), this.skillsDir);
     const filePath = join(absoluteSkillsDir, `${name}.js`);
-    
-    // Safely generate a file URL using Deno's standard library
-    const fileUrl = toFileUrl(filePath).href;
-    const cacheBustingUrl = `${fileUrl}?t=${Date.now()}`;
 
     try {
-      const module = await import(cacheBustingUrl);
-      if (typeof module.default !== "function") {
+      // Load raw code to provide it as LLM context and evaluation source
+      const rawCode = await Deno.readTextFile(filePath);
+      this.skillsSource[name] = rawCode;
+
+      const context = vm.createContext({
+        console,
+        Deno,
+        fetch,
+        setTimeout,
+        clearTimeout,
+        setInterval,
+        clearInterval,
+      });
+
+      const mod = new vm.SourceTextModule(rawCode, { context });
+      await mod.link(() => {});
+      await mod.evaluate();
+
+      if (typeof mod.namespace.default !== "function") {
         throw new Error(`Module does not export a default function`);
       }
       
-      this.skills[name] = module.default;
-      
-      // Load raw code to provide it as LLM context
-      const rawCode = await Deno.readTextFile(filePath);
-      this.skillsSource[name] = rawCode;
+      this.skills[name] = mod.namespace.default;
       
       console.log(`[SkillManager] Loaded skill: ${name}`);
     } catch (e) {
@@ -72,6 +82,7 @@ export class SkillManager {
     }
   }
 
+
   /**
    * Saves skill code to disk and dynamically imports/re-imports it.
    * 
@@ -79,7 +90,7 @@ export class SkillManager {
    * @param {string} code 
    */
   async saveSkill(name, code) {
-    const absoluteSkillsDir = join(Deno.cwd(), this.skillsDir);
+    const absoluteSkillsDir = isAbsolute(this.skillsDir) ? this.skillsDir : join(Deno.cwd(), this.skillsDir);
     const filePath = join(absoluteSkillsDir, `${name}.js`);
     
     await Deno.writeTextFile(filePath, code);

@@ -1,5 +1,0 @@
-# Memory Dump
-
-```json
-{}
-```

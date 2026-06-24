@@ -49,6 +49,7 @@ Deno.test("Memory Stack and Dictionary Store", () => {
 Deno.test({
   name: "Agent E2E Growth with Mock LLM",
   fn: async () => {
+    const originalCwd = Deno.cwd();
     const tempSkillsDir = "./temp_skills";
     const agent = new Agent({
       skillsDir: tempSkillsDir,
@@ -64,11 +65,20 @@ Deno.test({
     assertExists(finalAnswer);
     assertEquals(agent.memory.get("last_reversed_value"), "dlrow olleh");
 
-    // Cleanup temp skills directory
+    // Cleanup temp skills directory and MEMORY.md, and restore CWD
+    try {
+      Deno.chdir(originalCwd);
+    } catch (_) {}
+
     try {
       await Deno.remove(tempSkillsDir, { recursive: true });
-    } catch (_) {
-      // Ignore cleanup error
-    }
+    } catch (_) {}
+    try {
+      await Deno.remove("MEMORY.md");
+    } catch (_) {}
+    try {
+      const { join } = await import("https://deno.land/std@0.224.0/path/mod.ts");
+      await Deno.remove(join(originalCwd, "sessions"), { recursive: true });
+    } catch (_) {}
   }
 });
