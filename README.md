@@ -6,17 +6,24 @@ Pure JavaScriptのDSLを使用した自己成長型エージェント。
 
 ### 1. エージェントの実行
 
-以下のコマンドでエージェントを起動します（`deno` コマンドが環境変数 PATH に登録されていない場合は、ユーザープロファイル下の絶対パスを使用します）。
+以下のコマンドでエージェントを起動します。
 
-```powershell
-& "$env:USERPROFILE\.deno\bin\deno.exe" run --allow-read --allow-write --allow-env --allow-net agent.js "文字列 'hello world' を反転させる新しいスキル reverseString を作成して実行してください。"
+```bash
+deno run --allow-read --allow-write --allow-env --allow-net agent.js "文字列 'hello world' を反転させる新しいスキル reverseString を作成して実行してください。"
 ```
+
+> [!NOTE]
+> `deno` コマンドが認識されない場合は、ユーザープロファイル下のパスを使用してください：
+> `& "$env:USERPROFILE\.deno\bin\deno.exe" run --allow-read --allow-write --allow-env --allow-net agent.js "..."`
 
 ### 2. テストの実行
 
-```powershell
-& "$env:USERPROFILE\.deno\bin\deno.exe" test --allow-read --allow-write --allow-env --allow-net
+```bash
+deno test --allow-read --allow-write --allow-env --allow-net
 ```
+
+> [!NOTE]
+> コマンドが認識されない場合は `& "$env:USERPROFILE\.deno\bin\deno.exe" test ...` を使用してください。
 
 ## DSL仕様 (Pure JavaScript)
 
