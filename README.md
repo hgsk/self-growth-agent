@@ -37,7 +37,10 @@ deno test --allow-read --allow-write --allow-env --allow-net
   type: "action",
   name: "create_skill",
   skillName: "スキル名",
-  code: "export default async function run(agent, arg) { ... }"
+  code: `export default async function run(agent, arg) {
+    // スキルの実装コード（複数行文字列にはバッククォートを使用）
+    return "result";
+  }`
 }
 ```
 
@@ -57,5 +60,26 @@ deno test --allow-read --allow-write --allow-env --allow-net
   type: "action",
   name: "finish",
   message: "ユーザーへの最終回答メッセージ"
+}
+```
+
+### イベント (履歴管理・実行結果のフィードバック)
+
+#### ユーザー入力
+```javascript
+{
+  type: "event",
+  eventType: "user_input",
+  text: "ユーザー入力の内容"
+}
+```
+
+#### スキルの実行・作成結果
+```javascript
+{
+  type: "event",
+  eventType: "execution_result",
+  status: "success", // もしくは "error"
+  output: "実行出力またはエラー内容"
 }
 ```
